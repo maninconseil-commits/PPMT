@@ -2,10 +2,8 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime
-import os
-import joblib
+import subprocess
 
 st.set_page_config(
     page_title="PPMT - Plateforme Predictive des Metiers en Tension",
@@ -36,19 +34,35 @@ def load_predictions():
     except:
         return pd.DataFrame()
 
+# HEADER
+col_titre, col_btn = st.columns([4, 1])
+with col_titre:
+    st.markdown("# Plateforme Predictive des Metiers en Tension")
+    st.markdown("**Ile-de-France** | Sources : Adzuna + France Travail")
+with col_btn:
+    st.markdown("###")
+    if st.button("Rafraichir les donnees", type="primary"):
+        with st.spinner("Mise a jour en cours..."):
+            subprocess.run(["python3", "sources/clean_adzuna.py"])
+            subprocess.run(["python3", "sources/clean_ft.py"])
+            subprocess.run(["python3", "sources/create_db.py"])
+            subprocess.run(["python3", "sources/mapping_adzuna_rome.py"])
+            subprocess.run(["python3", "notebook/claire_analyse_tension.py"])
+            st.cache_data.clear()
+        st.success("Donnees mises a jour !")
+        st.rerun()
+
+st.divider()
+
 df = load_data()
 df_pred = load_predictions()
-
-st.markdown("# Plateforme Predictive des Metiers en Tension")
-st.markdown("**Ile-de-France** | Sources : Adzuna + France Travail")
-st.divider()
 
 k1, k2, k3, k4 = st.columns(4)
 k1.metric("Offres totales", f"{len(df):,}")
 k2.metric("Secteurs", df["categorie"].nunique())
 k3.metric("Entreprises", df["entreprise"].nunique())
 sal = df["salaire_moyen"].mean()
-k4.metric("Salaire moyen", f"{sal:,.0f}EUR" if sal > 0 else "N/D")
+k4.metric("Salaire moyen", f"{sal:,.0f} EUR" if sal > 0 else "N/D")
 
 st.divider()
 
@@ -61,7 +75,7 @@ with col1:
     fig = px.bar(df_cat, x="nb", y="categorie", orientation="h",
                  color="nb", color_continuous_scale=["#EBF8FF","#003189"])
     fig.update_layout(height=400, showlegend=False, coloraxis_showscale=False)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with col2:
     st.subheader("Offres par Departement")
@@ -71,7 +85,7 @@ with col2:
                       orientation="h", color="nb",
                       color_continuous_scale=["#EBF8FF","#003189"])
         fig2.update_layout(height=400, showlegend=False, coloraxis_showscale=False)
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 
 st.subheader("Salaires par Secteur")
 df_sal = df[df["salaire_moyen"].notna() & (df["categorie"] != "Unknown")]
@@ -81,7 +95,7 @@ if len(df_sal) > 0:
     fig3 = px.bar(df_sg, x="categorie", y="salaire_moyen",
                   color="salaire_moyen", color_continuous_scale=["#EBF8FF","#003189"])
     fig3.update_layout(height=300, coloraxis_showscale=False)
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig3, width="stretch")
 
 st.divider()
 
@@ -96,7 +110,7 @@ if len(df_pred) > 0:
             df_pred.sort_values("itm_predit", ascending=False)[
                 ["code_rome", "libelle", "indice_tension", "itm_predit", "statut_predit"]
             ].head(10),
-            use_container_width=True
+            width="stretch"
         )
 
     with col_ml2:
@@ -112,7 +126,7 @@ if len(df_pred) > 0:
                 "SATURE": "#2B6CB0"
             }
         )
-        st.plotly_chart(fig_ml, use_container_width=True)
+        st.plotly_chart(fig_ml, width="stretch")
 else:
     st.info("Predictions ML non disponibles")
 
@@ -123,7 +137,7 @@ recherche = st.text_input("Rechercher...")
 df_table = df[df["titre"].str.contains(recherche, case=False, na=False)] if recherche else df
 st.dataframe(
     df_table[["titre","entreprise","lieu","contrat","salaire_moyen","url"]].head(100),
-    use_container_width=True,
+    width="stretch",
     column_config={"url": st.column_config.LinkColumn("Lien")}
 )
 
