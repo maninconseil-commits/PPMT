@@ -1,6 +1,6 @@
 # PPMT - Plateforme Predictive des Metiers en Tension
 
-> Projet Data Engineering & Data Science - Soutenance 29/05/2026
+> Projet Data Analyst - Soutenance 29/05/2026
 > Equipe : Bernard | Claire
 
 ---
@@ -105,7 +105,7 @@ streamlit run webapp/app.py
 | Membre | Role | Taches |
 |--------|------|--------|
 | Claire | Data Analyst / ML | clean_adzuna.py, analyse_tension.py, dashboard |
-| Bernard | Data Engineer | clean_ft.py, create_db.py, mapping_rome.py |
+| Bernard | Data Analyst | clean_ft.py, create_db.py, mapping_rome.py |
 
 ---
 
