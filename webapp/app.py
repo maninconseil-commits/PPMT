@@ -85,10 +85,6 @@ if len(df_sal) > 0:
 
 st.divider()
 
-# ============================================================
-# SECTION ML
-# ============================================================
-
 st.subheader("Prediction ML - Indice de Tension Metiers")
 
 if len(df_pred) > 0:
