@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import os
+import joblib
 
 st.set_page_config(
     page_title="PPMT - Plateforme Predictive des Metiers en Tension",
@@ -28,7 +29,15 @@ def load_data():
     df["contrat"] = df.get("contrat", "").fillna("Non renseigne")
     return df
 
+@st.cache_data
+def load_predictions():
+    try:
+        return pd.read_csv("data/predictions_itm.csv")
+    except:
+        return pd.DataFrame()
+
 df = load_data()
+df_pred = load_predictions()
 
 st.markdown("# Plateforme Predictive des Metiers en Tension")
 st.markdown("**Ile-de-France** | Sources : Adzuna + France Travail")
@@ -74,6 +83,41 @@ if len(df_sal) > 0:
     fig3.update_layout(height=300, coloraxis_showscale=False)
     st.plotly_chart(fig3, use_container_width=True)
 
+st.divider()
+
+st.subheader("Prediction ML - Indice de Tension Metiers")
+
+if len(df_pred) > 0:
+    col_ml1, col_ml2 = st.columns(2)
+
+    with col_ml1:
+        st.markdown("**Top 10 metiers en tension**")
+        st.dataframe(
+            df_pred.sort_values("itm_predit", ascending=False)[
+                ["code_rome", "libelle", "indice_tension", "itm_predit", "statut_predit"]
+            ].head(10),
+            use_container_width=True
+        )
+
+    with col_ml2:
+        st.markdown("**Repartition des statuts**")
+        df_statuts = df_pred["statut_predit"].value_counts().reset_index()
+        df_statuts.columns = ["statut", "nb"]
+        fig_ml = px.pie(
+            df_statuts, values="nb", names="statut",
+            color_discrete_map={
+                "TRES EN TENSION": "#C53030",
+                "EN TENSION": "#DD6B20",
+                "EQUILIBRE": "#38A169",
+                "SATURE": "#2B6CB0"
+            }
+        )
+        st.plotly_chart(fig_ml, use_container_width=True)
+else:
+    st.info("Predictions ML non disponibles")
+
+st.divider()
+
 st.subheader("Offres")
 recherche = st.text_input("Rechercher...")
 df_table = df[df["titre"].str.contains(recherche, case=False, na=False)] if recherche else df
@@ -82,3 +126,6 @@ st.dataframe(
     use_container_width=True,
     column_config={"url": st.column_config.LinkColumn("Lien")}
 )
+
+st.divider()
+st.caption(f"PPMT | Donnees : Adzuna + France Travail | {datetime.now().strftime('%d/%m/%Y')}")
