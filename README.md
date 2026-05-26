@@ -1,6 +1,6 @@
 # PPMT - Plateforme Predictive des Metiers en Tension
 
-> Projet Data Engineering & Data Science - Soutenance 29/05/2026
+> Projet Data Analyst - Soutenance 29/05/2026
 > Equipe : Bernard | Claire
 
 ---
@@ -9,7 +9,7 @@
 
 Identifier les metiers en tension sur le marche du travail francais en croisant
 les donnees Adzuna et France Travail, et proposer une analyse predictive via
-un dashboard interactif.
+un dashboard interactif Streamlit.
 
 ---
 
@@ -19,32 +19,48 @@ PPMT/
 ├── data/
 │   ├── raw/
 │   │   └── tous_les_codes_rome.json     # Referentiel codes ROME 4.0
-│   ├── processed/                        # (vide - reserve aux futures exports)
+│   ├── processed/
 │   ├── offres_idf.csv                   # Donnees brutes Adzuna
 │   ├── offres_ft_idf.csv               # Donnees brutes France Travail
-│   ├── offres_idf_clean.csv            # Adzuna nettoye (4 980 offres)
+│   ├── offres_idf_clean.csv            # Adzuna nettoye (4 626 offres)
 │   ├── offres_ft_idf_clean.csv         # France Travail nettoye (24 051 offres)
-│   ├── itm_consolide.csv               # Metiers en tension consolides
-│   ├── predictions_itm.csv             # Predictions ML
-│   └── database.db                      # Base SQLite (~40 Mo)
+│   ├── itm_consolide.csv               # 1 102 metiers consolides
+│   ├── predictions_itm.csv             # Predictions ML Random Forest
+│   └── database.db                      # Base SQLite
 ├── sources/
 │   ├── clean_adzuna.py                  # Nettoyage donnees Adzuna
 │   ├── clean_ft.py                      # Nettoyage donnees France Travail
 │   ├── create_db.py                     # Creation base SQLite
-│   ├── mapping_adzuna_rome.py           # Mapping codes ROME + tension
-│   └── extract_api_ft.py               # Extraction API France Travail
+│   ├── mapping_adzuna_rome.py           # Mapping categories vers codes ROME
+│   ├── remap_categories.py              # Reclassification categories Adzuna
+│   └── extract_api_ft.py               # Extraction API France Travail (OAuth2)
 ├── notebook/
-│   ├── claire_analyse_tension.py        # Analyse ML tensions
-│   ├── Extract_api.py                   # Extraction API
-│   ├── Extract_scraping.py              # Scripts scraping
-│   └── extract-adzuna.py               # Extraction Adzuna
+│   ├── ml_tests.py                      # Comparatif 3 modeles ML + data leakage
+│   └── bernard_nettoyage.py             # Scripts nettoyage Bernard
 ├── webapp/
 │   ├── app.py                           # Dashboard Streamlit
 │   └── models/
-│       ├── modele_itm.pkl              # Modele ML Random Forest
+│       ├── modele_itm.pkl              # Modele ML Random Forest (R2=0.9952)
 │       ├── scaler_itm.pkl              # Scaler normalisation
 │       └── features_itm.pkl            # Features du modele
+├── .env                                 # Cles API (non versionne)
+├── .gitignore
+├── requirements.txt
 └── README.md
+
+---
+
+## Installation
+
+git clone https://github.com/maninconseil-commits/PPMT.git
+cd PPMT
+pip install -r requirements.txt
+
+Creer le fichier .env a la racine :
+FT_CLIENT_ID=votre_client_id
+FT_CLIENT_SECRET=votre_client_secret
+
+Les cles sont disponibles sur https://francetravail.io apres creation d'un compte.
 
 ---
 
@@ -52,60 +68,80 @@ PPMT/
 
 | Source | Fichier brut | Fichier clean | Volume |
 |--------|-------------|---------------|--------|
-| Adzuna API | offres_idf.csv | offres_idf_clean.csv | 4 980 offres |
+| Adzuna API | offres_idf.csv | offres_idf_clean.csv | 4 626 offres |
 | France Travail API | offres_ft_idf.csv | offres_ft_idf_clean.csv | 24 051 offres |
+| ITM Consolide | - | itm_consolide.csv | 1 102 metiers |
 
 ---
 
-## Pipeline - ordre de execution
+## Pipeline - ordre d'execution
 
 # 1. Nettoyage donnees
 python3 sources/clean_adzuna.py
 python3 sources/clean_ft.py
 
-# 2. Base de donnees
+# 2. Reclassification categories
+python3 sources/remap_categories.py
+
+# 3. Base de donnees
 python3 sources/create_db.py
 
-# 3. Mapping ROME et detection tensions
+# 4. Mapping codes ROME
 python3 sources/mapping_adzuna_rome.py
 
-# 4. Analyse ML
-python3 notebook/claire_analyse_tension.py
+# 5. Tests ML
+python3 notebook/ml_tests.py
 
-# 5. Dashboard
+# 6. Dashboard
 streamlit run webapp/app.py
+
+---
+
+## Modele ML
+
+| Modele | MAE | R2 | Decision |
+|--------|-----|----|----------|
+| Random Forest | 2.24 | 0.9952 | RETENU |
+| XGBoost | 2.72 | 0.9940 | Non retenu |
+| Regression Lineaire | 0.02 | 1.0000 | ECARTE (data leakage) |
+
+La regression lineaire a ete ecartee car elle exploite nb_offres_total
+qui est une combinaison exacte de nb_offres_ft + nb_offres_adzuna.
 
 ---
 
 ## Resultats
 
-- 55 metiers EN TENSION identifies
-- 145 metiers LIBRES
-- Modele ML : Random Forest
-- Dashboard interactif sur http://localhost:8501
+| Statut | Seuil ITM | Nb metiers |
+|--------|-----------|------------|
+| SATURE | < 50 | 723 |
+| EQUILIBRE | 50 - 100 | 145 |
+| EN TENSION | 100 - 150 | 55 |
+| TRES EN TENSION | > 150 | 179 |
+
+Top metiers en tension : Soins infirmiers (2885), Informatique (2791), Immobilier (2243)
 
 ---
 
 ## Data Dictionnaire
 
-| Champ | Source | Description | Risque qualite |
-|-------|--------|-------------|----------------|
-| code_rome | France Travail | Code metier 5 caracteres | - |
-| titre | Adzuna / FT | Intitule du poste | Nettoyage requis |
-| salaire_min | Adzuna | Salaire minimum annuel | 71% manquants |
-| salaire_max | Adzuna | Salaire maximum annuel | 71% manquants |
-| lieu | Adzuna / FT | Ville ou region | Normalisation requise |
-| contrat | Adzuna / FT | CDI / CDD / Interim | Valeurs heterogenes |
-| tension_itm | Calcule | EN TENSION / LIBRE | Seuil > 1.5 |
+| Champ | Source | Description | Qualite |
+|-------|--------|-------------|---------|
+| code_rome | France Travail | Code metier ROME 4.0 | Complet |
+| titre | Adzuna / FT | Intitule du poste | Nettoye |
+| salaire_moyen | Adzuna / FT | Salaire annuel moyen | Enrichi via mediane FT |
+| contrat | Adzuna / FT | CDI / CDD / Interim / Autre | Normalise 4 categories |
+| indice_tension | Calcule | Nb offres pour 100 candidats | Via ITM France Travail |
+| statut | Calcule | SATURE / EQUILIBRE / EN TENSION / TRES EN TENSION | Seuils 50/100/150 |
 
 ---
 
-## Equipe et responsabilites
+## Equipe
 
-| Membre | Role | Taches |
-|--------|------|--------|
-| Claire | Data Analyst / ML | clean_adzuna.py, analyse_tension.py, dashboard |
-| Bernard | Data Engineer | clean_ft.py, create_db.py, mapping_rome.py |
+| Membre | Role | Taches principales |
+|--------|------|--------------------|
+| Claire | Data Analyst | Nettoyage Adzuna, reclassification categories, modeles ML, dashboard |
+| Bernard | Data Analyst | Nettoyage France Travail, base de donnees, mapping ROME, API FT |
 
 ---
 
