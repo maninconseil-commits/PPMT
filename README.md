@@ -26,6 +26,7 @@ PPMT/
 │   ├── offres_ft_idf_clean.csv         # France Travail nettoye (24 051 offres)
 │   ├── itm_consolide.csv               # 1 102 metiers consolides
 │   ├── predictions_itm.csv             # Predictions ML Random Forest
+├── docs/
 │   └── dictionnaire.md                  # Dictionnaire des donnees
 │   └── database.db                      # Base SQLite
 ├── sources/
