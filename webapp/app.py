@@ -47,7 +47,7 @@ with col_btn:
             subprocess.run(["python3", "sources/clean_ft.py"])
             subprocess.run(["python3", "sources/create_db.py"])
             subprocess.run(["python3", "sources/mapping_adzuna_rome.py"])
-            subprocess.run(["python3", "notebook/claire_analyse_tension.py"])
+            subprocess.run(["python3", "notebook/ml_tests.py"])
             st.cache_data.clear()
         st.success("Donnees mises a jour !")
         st.rerun()
