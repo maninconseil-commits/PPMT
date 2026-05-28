@@ -1,8 +1,23 @@
-pandas
-numpy
-requests
-scikit-learn
-joblib
-streamlit
-plotly
-python-dotenv
+# PPMT — Requirements
+# Formation Data Analyst RNCP37827BC01 — Artefact 2026
+
+# Data manipulation
+pandas>=1.5
+numpy>=1.23
+
+# Machine Learning
+scikit-learn>=1.1
+xgboost>=1.7
+joblib>=1.2
+
+# API & Web
+requests>=2.28
+python-dotenv>=0.21
+
+# Dashboard
+streamlit>=1.20
+plotly>=5.10
+
+# Visualisation
+matplotlib>=3.6
+seaborn>=0.12
