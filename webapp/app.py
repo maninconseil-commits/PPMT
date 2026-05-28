@@ -253,7 +253,7 @@ with tab1:
     col1,col2 = st.columns(2)
     with col1:
         st.subheader("Repartition des statuts ITM")
-        st.markdown('<div class="section-note">Donnees issues du fichier <b>itm_consolide.csv</b> — 1 102 metiers combines Adzuna + France Travail. Seuils : SATURE &lt;50 · EQUILIBRE 50-100 · EN TENSION 100-150 · TRES EN TENSION &gt;150</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-note">Donnees issues du fichier <b>itm_consolide.csv</b> — 1 102 metiers combines Adzuna + France Travail. Seuils : SATURE &lt;50 · EQUILIBRE 50-100 · EN TENSION 100-150 · TRES EN TENSION &gt;150. <b>Ce graphique est global IDF et ne change pas avec les filtres</b> — il reflete la tension structurelle de chaque metier sur toute la region.</div>', unsafe_allow_html=True)
         if len(df_itm)>0:
             df_s = df_itm["statut"].value_counts().reset_index()
             df_s.columns = ["statut","nb"]
@@ -273,7 +273,7 @@ with tab1:
 
     with col2:
         st.subheader("Top 10 metiers en tension (ITM IDF)")
-        st.markdown('<div class="section-note">Indice de tension = nb offres pour 100 candidats. Source : <b>itm_consolide.csv</b> (Adzuna + France Travail combines)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-note">Indice de tension = nb offres pour 100 candidats. Source : <b>itm_consolide.csv</b> (Adzuna + France Travail combines). <b>Classement global IDF — non affecte par les filtres</b> departement/contrat/secteur.</div>', unsafe_allow_html=True)
         if len(df_itm)>0:
             top10 = df_itm[df_itm["statut"]=="TRES EN TENSION"].sort_values("indice_tension",ascending=False).head(10)
             fig2 = px.bar(top10, x="indice_tension", y="libelle", orientation="h",
