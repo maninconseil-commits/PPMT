@@ -253,27 +253,30 @@ with tab1:
     col1,col2 = st.columns(2)
     with col1:
         st.subheader("Repartition des statuts ITM")
-        st.markdown('<div class="section-note">Donnees issues du fichier <b>itm_consolide.csv</b> — 1 102 metiers combines Adzuna + France Travail. Seuils : SATURE &lt;50 · EQUILIBRE 50-100 · EN TENSION 100-150 · TRES EN TENSION &gt;150. <b>Ce graphique est global IDF et ne change pas avec les filtres</b> — il reflete la tension structurelle de chaque metier sur toute la region.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-note">Donnees issues du fichier <b>itm_consolide.csv</b> — 1 102 metiers combines Adzuna + France Travail. Seuils : SATURE &lt;50 · EQUILIBRE 50-100 · EN TENSION 100-150 · TRES EN TENSION &gt;150</div>', unsafe_allow_html=True)
         if len(df_itm)>0:
             df_s = df_itm["statut"].value_counts().reset_index()
             df_s.columns = ["statut","nb"]
             ordre = ["SATURE","EQUILIBRE","EN TENSION","TRES EN TENSION"]
             df_s["statut"] = pd.Categorical(df_s["statut"], categories=ordre, ordered=True)
             df_s = df_s.sort_values("statut")
-            fig = px.bar(df_s, x="statut", y="nb", color="statut",
-                color_discrete_map={"TRES EN TENSION":"#C53030","EN TENSION":"#DD6B20","EQUILIBRE":"#38A169","SATURE":"#2B6CB0"},
-                text="nb",
-                labels={"statut":"Statut ITM","nb":"Nombre de metiers"},
-                category_orders={"statut":ordre})
-            fig.update_traces(textposition="outside")
-            fig.update_layout(height=380, showlegend=True, legend_title="Statut ITM",
-                xaxis_title="Statut", yaxis_title="Nombre de metiers",
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-            st.plotly_chart(fig, width="stretch")
+            if len(df_s) > 0:
+                fig = px.bar(df_s, x="statut", y="nb", color="statut",
+                    color_discrete_map={"TRES EN TENSION":"#C53030","EN TENSION":"#DD6B20","EQUILIBRE":"#38A169","SATURE":"#2B6CB0"},
+                    text="nb",
+                    labels={"statut":"Statut ITM","nb":"Nombre de metiers"},
+                    category_orders={"statut":ordre})
+                fig.update_traces(textposition="outside")
+                fig.update_layout(height=380, showlegend=True, legend_title="Statut ITM",
+                    xaxis_title="Statut", yaxis_title="Nombre de metiers",
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                st.plotly_chart(fig, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col2:
         st.subheader("Top 10 metiers en tension (ITM IDF)")
-        st.markdown('<div class="section-note">Indice de tension = nb offres pour 100 candidats. Source : <b>itm_consolide.csv</b> (Adzuna + France Travail combines). <b>Classement global IDF — non affecte par les filtres</b> departement/contrat/secteur.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-note">Indice de tension = nb offres pour 100 candidats. Source : <b>itm_consolide.csv</b> (Adzuna + France Travail combines)</div>', unsafe_allow_html=True)
         if len(df_itm)>0:
             top10 = df_itm[df_itm["statut"]=="TRES EN TENSION"].sort_values("indice_tension",ascending=False).head(10)
             fig2 = px.bar(top10, x="indice_tension", y="libelle", orientation="h",
@@ -327,12 +330,15 @@ with tab2:
         if "categorie" in df_filtered.columns:
             df_cat = df_filtered.groupby("categorie").size().reset_index(name="nb")
             df_cat = df_cat[~df_cat["categorie"].isin(["Unknown",""])].sort_values("nb",ascending=True).tail(15)
-            fig = px.bar(df_cat, x="nb", y="categorie", orientation="h",
-                color="nb", color_continuous_scale=["#EBF8FF","#003189"], text="nb")
-            fig.update_traces(texttemplate="%{text:,}", textposition="outside")
-            fig.update_layout(height=520, showlegend=False, coloraxis_showscale=False,
-                xaxis_title="Nombre d offres", yaxis_title="")
-            st.plotly_chart(fig, width="stretch")
+            if len(df_cat) > 0:
+                fig = px.bar(df_cat, x="nb", y="categorie", orientation="h",
+                    color="nb", color_continuous_scale=["#EBF8FF","#003189"], text="nb")
+                fig.update_traces(texttemplate="%{text:,}", textposition="outside")
+                fig.update_layout(height=520, showlegend=False, coloraxis_showscale=False,
+                    xaxis_title="Nombre d offres", yaxis_title="")
+                st.plotly_chart(fig, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col2:
         st.subheader("Prediction metiers en tension par secteur")
@@ -361,26 +367,32 @@ with tab2:
             df_co_ft = df_ft.groupby("contrat_norm").size().reset_index(name="nb")
             df_co_ft = df_co_ft[df_co_ft["contrat_norm"]!="Non renseigne"].sort_values("nb",ascending=False)
             colors_ct = {"CDI":"#003189","CDD":"#3182CE","Interim":"#63B3ED","Saisonnier":"#90CDF4","Alternance":"#48BB78","Profession liberale":"#9F7AEA","Autre":"#CBD5E0"}
-            fig_ft_co = px.bar(df_co_ft, x="contrat_norm", y="nb", color="contrat_norm",
-                color_discrete_map=colors_ct, text="nb",
-                labels={"contrat_norm":"Type de contrat","nb":"Offres"})
-            fig_ft_co.update_traces(textposition="outside")
-            fig_ft_co.update_layout(height=350, showlegend=False,
-                xaxis_title="", yaxis_title="Offres France Travail")
-            st.plotly_chart(fig_ft_co, width="stretch")
+            if len(df_co_ft) > 0:
+                fig_ft_co = px.bar(df_co_ft, x="contrat_norm", y="nb", color="contrat_norm",
+                    color_discrete_map=colors_ct, text="nb",
+                    labels={"contrat_norm":"Type de contrat","nb":"Offres"})
+                fig_ft_co.update_traces(textposition="outside")
+                fig_ft_co.update_layout(height=350, showlegend=False,
+                    xaxis_title="", yaxis_title="Offres France Travail")
+                st.plotly_chart(fig_ft_co, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col_c2:
         st.markdown("**Adzuna — Contrats normalises**")
         if "contrat_norm" in df_az.columns:
             df_co_az = df_az.groupby("contrat_norm").size().reset_index(name="nb")
             df_co_az = df_co_az[df_co_az["contrat_norm"]!="Non renseigne"].sort_values("nb",ascending=False)
-            fig_az_co = px.bar(df_co_az, x="contrat_norm", y="nb", color="contrat_norm",
-                color_discrete_map=colors_ct, text="nb",
-                labels={"contrat_norm":"Type de contrat","nb":"Offres"})
-            fig_az_co.update_traces(textposition="outside")
-            fig_az_co.update_layout(height=350, showlegend=False,
-                xaxis_title="", yaxis_title="Offres Adzuna")
-            st.plotly_chart(fig_az_co, width="stretch")
+            if len(df_co_az) > 0:
+                fig_az_co = px.bar(df_co_az, x="contrat_norm", y="nb", color="contrat_norm",
+                    color_discrete_map=colors_ct, text="nb",
+                    labels={"contrat_norm":"Type de contrat","nb":"Offres"})
+                fig_az_co.update_traces(textposition="outside")
+                fig_az_co.update_layout(height=350, showlegend=False,
+                    xaxis_title="", yaxis_title="Offres Adzuna")
+                st.plotly_chart(fig_az_co, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
 # ══════════════════════════════════════════════════════════════
 # TAB 3 — COMPETENCES & TECH
@@ -399,26 +411,32 @@ with tab3:
         hard = merge_skills(sk_az, sk_ft, "hard")
         if hard:
             df_h = pd.DataFrame(list(hard.items()),columns=["skill","nb"]).sort_values("nb")
-            fig = px.bar(df_h, x="nb", y="skill", orientation="h",
-                color="nb", color_continuous_scale=["#EBF8FF","#003189"], text="nb",
-                labels={"nb":"Occurrences dans les offres","skill":"Competence"})
-            fig.update_traces(textposition="outside")
-            fig.update_layout(height=520, showlegend=False, coloraxis_showscale=False,
-                xaxis_title="Nb occurrences dans les offres (tous secteurs)", yaxis_title="")
-            st.plotly_chart(fig, width="stretch")
+            if len(df_h) > 0:
+                fig = px.bar(df_h, x="nb", y="skill", orientation="h",
+                    color="nb", color_continuous_scale=["#EBF8FF","#003189"], text="nb",
+                    labels={"nb":"Occurrences dans les offres","skill":"Competence"})
+                fig.update_traces(textposition="outside")
+                fig.update_layout(height=520, showlegend=False, coloraxis_showscale=False,
+                    xaxis_title="Nb occurrences dans les offres (tous secteurs)", yaxis_title="")
+                st.plotly_chart(fig, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col2:
         st.markdown("#### Soft Skills les plus demandes")
         soft = merge_skills(sk_az, sk_ft, "soft")
         if soft:
             df_so = pd.DataFrame(list(soft.items()),columns=["skill","nb"]).sort_values("nb")
-            fig2 = px.bar(df_so, x="nb", y="skill", orientation="h",
-                color="nb", color_continuous_scale=["#F0FFF4","#38A169"], text="nb",
-                labels={"nb":"Occurrences","skill":"Competence"})
-            fig2.update_traces(textposition="outside")
-            fig2.update_layout(height=520, showlegend=False, coloraxis_showscale=False,
-                xaxis_title="Nb occurrences dans les offres", yaxis_title="")
-            st.plotly_chart(fig2, width="stretch")
+            if len(df_so) > 0:
+                fig2 = px.bar(df_so, x="nb", y="skill", orientation="h",
+                    color="nb", color_continuous_scale=["#F0FFF4","#38A169"], text="nb",
+                    labels={"nb":"Occurrences","skill":"Competence"})
+                fig2.update_traces(textposition="outside")
+                fig2.update_layout(height=520, showlegend=False, coloraxis_showscale=False,
+                    xaxis_title="Nb occurrences dans les offres", yaxis_title="")
+                st.plotly_chart(fig2, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     st.divider()
     tech = merge_skills(sk_az, sk_ft, "tech")
@@ -426,13 +444,16 @@ with tab3:
         st.markdown("#### Technologies emergentes (hors termes generiques comme 'ia' ou 'cloud')")
         st.markdown('<div class="section-note">Termes specifiques uniquement : llm, gpt, devops, mlops, data lake, streaming, rpa, blockchain, microservices... Le terme "ia" a ete exclu car trop generique et ecrase les autres resultats.</div>', unsafe_allow_html=True)
         df_t = pd.DataFrame(list(tech.items()),columns=["tech","nb"]).sort_values("nb",ascending=False)
-        fig3 = px.bar(df_t, x="nb", y="tech", orientation="h",
-            color="nb", color_continuous_scale=["#FFF5F5","#C53030"], text="nb",
-            labels={"nb":"Occurrences","tech":"Technologie"})
-        fig3.update_traces(textposition="outside")
-        fig3.update_layout(height=max(280, len(df_t)*38), showlegend=False, coloraxis_showscale=False,
-            xaxis_title="Nb occurrences dans les offres", yaxis_title="")
-        st.plotly_chart(fig3, width="stretch")
+        if len(df_t) > 0:
+            fig3 = px.bar(df_t, x="nb", y="tech", orientation="h",
+                color="nb", color_continuous_scale=["#FFF5F5","#C53030"], text="nb",
+                labels={"nb":"Occurrences","tech":"Technologie"})
+            fig3.update_traces(textposition="outside")
+            fig3.update_layout(height=max(280, len(df_t)*38), showlegend=False, coloraxis_showscale=False,
+                xaxis_title="Nb occurrences dans les offres", yaxis_title="")
+            st.plotly_chart(fig3, width="stretch")
+        else:
+            st.info("Aucune donnee pour cette combinaison de filtres.")
     else:
         st.info("Donnees insuffisantes pour les technologies emergentes — les descriptions ne contiennent pas assez de termes specifiques.")
 
@@ -452,13 +473,16 @@ with tab4:
             ordre_form = ["doctorat","mba","ingenieur","bac+5","master","licence","bac+3","bac+2","dut","bts"]
             df_fq["formation"] = pd.Categorical(df_fq["formation"], categories=ordre_form, ordered=True)
             df_fq = df_fq.sort_values("formation")
-            fig = px.bar(df_fq, x="formation", y="nb", color="nb",
-                color_continuous_scale=["#FFFAF0","#DD6B20"], text="nb",
-                labels={"nb":"Occurrences","formation":"Niveau"})
-            fig.update_traces(textposition="outside")
-            fig.update_layout(height=350, showlegend=False, coloraxis_showscale=False,
-                xaxis_title="Niveau de diplome (prerequis employeur)", yaxis_title="Occurrences")
-            st.plotly_chart(fig, width="stretch")
+            if len(df_fq) > 0:
+                fig = px.bar(df_fq, x="formation", y="nb", color="nb",
+                    color_continuous_scale=["#FFFAF0","#DD6B20"], text="nb",
+                    labels={"nb":"Occurrences","formation":"Niveau"})
+                fig.update_traces(textposition="outside")
+                fig.update_layout(height=350, showlegend=False, coloraxis_showscale=False,
+                    xaxis_title="Niveau de diplome (prerequis employeur)", yaxis_title="Occurrences")
+                st.plotly_chart(fig, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col2:
         st.markdown("#### Modalites de formation et alternance")
@@ -467,13 +491,16 @@ with tab4:
         if ft_type:
             df_ft2 = pd.DataFrame(list(ft_type.items()),columns=["modalite","nb"]).sort_values("nb",ascending=False)
             colors_mod = {"alternance":"#48BB78","apprentissage":"#38A169","certification":"#3182CE","diplome":"#003189"}
-            fig2 = px.bar(df_ft2, x="modalite", y="nb", color="modalite",
-                color_discrete_map=colors_mod, text="nb",
-                labels={"modalite":"Modalite","nb":"Occurrences"})
-            fig2.update_traces(textposition="outside")
-            fig2.update_layout(height=350, showlegend=False,
-                xaxis_title="", yaxis_title="Occurrences dans les offres")
-            st.plotly_chart(fig2, width="stretch")
+            if len(df_ft2) > 0:
+                fig2 = px.bar(df_ft2, x="modalite", y="nb", color="modalite",
+                    color_discrete_map=colors_mod, text="nb",
+                    labels={"modalite":"Modalite","nb":"Occurrences"})
+                fig2.update_traces(textposition="outside")
+                fig2.update_layout(height=350, showlegend=False,
+                    xaxis_title="", yaxis_title="Occurrences dans les offres")
+                st.plotly_chart(fig2, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     st.divider()
     col3,col4 = st.columns(2)
@@ -542,15 +569,18 @@ with tab5:
             ordre = ["SATURE","EQUILIBRE","EN TENSION","TRES EN TENSION"]
             df_s_act["statut"] = pd.Categorical(df_s_act["statut"], categories=ordre, ordered=True)
             df_s_act = df_s_act.sort_values("statut")
-            fig_act = px.bar(df_s_act, x="statut", y="nb", color="statut",
-                color_discrete_map={"TRES EN TENSION":"#C53030","EN TENSION":"#DD6B20","EQUILIBRE":"#38A169","SATURE":"#2B6CB0"},
-                text="nb", labels={"statut":"Statut","nb":"Metiers"})
-            fig_act.update_traces(textposition="outside")
-            fig_act.update_layout(height=350, showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=1.02),
-                xaxis_title="", yaxis_title="Nb metiers",
-                legend_title="Statut actuel")
-            st.plotly_chart(fig_act, width="stretch")
+            if len(df_s_act) > 0:
+                fig_act = px.bar(df_s_act, x="statut", y="nb", color="statut",
+                    color_discrete_map={"TRES EN TENSION":"#C53030","EN TENSION":"#DD6B20","EQUILIBRE":"#38A169","SATURE":"#2B6CB0"},
+                    text="nb", labels={"statut":"Statut","nb":"Metiers"})
+                fig_act.update_traces(textposition="outside")
+                fig_act.update_layout(height=350, showlegend=True,
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02),
+                    xaxis_title="", yaxis_title="Nb metiers",
+                    legend_title="Statut actuel")
+                st.plotly_chart(fig_act, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col2:
         st.markdown("#### Statut predit (Random Forest)")
@@ -619,13 +649,16 @@ with tab5:
             }
             df_dept["lat"] = df_dept["departement"].map(lambda x: coords.get(x,[48.85,2.35])[0])
             df_dept["lon"] = df_dept["departement"].map(lambda x: coords.get(x,[48.85,2.35])[1])
-            fig_map = px.scatter_map(df_dept, lat="lat", lon="lon", size="nb",
-                color="nb", hover_name="departement",
-                hover_data={"nb":True,"lat":False,"lon":False},
-                color_continuous_scale=["#EBF8FF","#003189"],
-                size_max=60, zoom=9, map_style="carto-positron")
-            fig_map.update_layout(height=420, coloraxis_showscale=False)
-            st.plotly_chart(fig_map, width="stretch")
+            if len(df_dept) > 0:
+                fig_map = px.scatter_mapbox(df_dept, lat="lat", lon="lon", size="nb",
+                    color="nb", hover_name="departement",
+                    hover_data={"nb":True,"lat":False,"lon":False},
+                    color_continuous_scale=["#EBF8FF","#003189"],
+                    size_max=60, zoom=9, mapbox_style="carto-positron")
+                fig_map.update_layout(height=420, coloraxis_showscale=False)
+                st.plotly_chart(fig_map, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col6:
         st.markdown("#### Metiers en tension IDF vs offres actives")
@@ -722,13 +755,16 @@ with tab6:
             df_sdg = df_sd.groupby("departement")["salaire_moyen"].agg(["mean","count"]).reset_index()
             df_sdg.columns = ["departement","salaire_moyen","nb"]
             df_sdg = df_sdg[df_sdg["nb"]>=5].sort_values("salaire_moyen",ascending=True)
-            fig4 = px.bar(df_sdg, x="salaire_moyen", y="departement", orientation="h",
-                color="salaire_moyen", color_continuous_scale=["#F0FFF4","#276749"],
-                text="salaire_moyen", labels={"salaire_moyen":"Salaire (EUR/an)","departement":""})
-            fig4.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-            fig4.update_layout(height=380, showlegend=False, coloraxis_showscale=False,
-                xaxis_title="Salaire moyen annuel (EUR)")
-            st.plotly_chart(fig4, width="stretch")
+            if len(df_sdg) > 0:
+                fig4 = px.bar(df_sdg, x="salaire_moyen", y="departement", orientation="h",
+                    color="salaire_moyen", color_continuous_scale=["#F0FFF4","#276749"],
+                    text="salaire_moyen", labels={"salaire_moyen":"Salaire (EUR/an)","departement":""})
+                fig4.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+                fig4.update_layout(height=380, showlegend=False, coloraxis_showscale=False,
+                    xaxis_title="Salaire moyen annuel (EUR)")
+                st.plotly_chart(fig4, width="stretch")
+            else:
+                st.info("Aucune donnee pour cette combinaison de filtres.")
 
 # ─── FOOTER ──────────────────────────────────────────────────
 st.markdown(f"""
