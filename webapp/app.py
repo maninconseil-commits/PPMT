@@ -102,6 +102,15 @@ def extract_skills(df, col="description"):
 def merge_skills(s1, s2, key):
     return dict((Counter(s1.get(key, {})) + Counter(s2.get(key, {}))).most_common(15))
 
+@st.cache_data
+def extract_skills_tension(df_az, df_ft, df_pred):
+    romes = df_pred[df_pred["statut_predit"]=="TRES EN TENSION"]["code_rome"].tolist()
+    df_az_t = df_az[df_az["code_rome"].isin(romes)] if "code_rome" in df_az.columns else df_az
+    df_ft_t = df_ft[df_ft["code_rome"].isin(romes)] if "code_rome" in df_ft.columns else df_ft
+    sk_az = extract_skills(df_az_t) if len(df_az_t)>0 else {}
+    sk_ft = extract_skills(df_ft_t) if len(df_ft_t)>0 else {}
+    return sk_az, sk_ft
+
 def normaliser_contrat_ft(val):
     if pd.isna(val): return "Non renseigne"
     v = str(val).upper()
@@ -402,8 +411,7 @@ with tab3:
     st.markdown('<div class="section-note">Extraction automatique depuis les descriptions d offres — <b>tous secteurs confondus</b> (Adzuna + France Travail). Echelle = nombre d occurrences dans les textes des offres (ex: si "python" apparait 500 fois dans 24 000 offres = 500 occurrences).</div>', unsafe_allow_html=True)
 
     with st.spinner("Analyse des descriptions en cours..."):
-        sk_az = extract_skills(df_az) if len(df_az)>0 else {}
-        sk_ft = extract_skills(df_ft) if len(df_ft)>0 else {}
+        sk_az, sk_ft = extract_skills_tension(df_az, df_ft, df_pred)
 
     col1,col2 = st.columns(2)
     with col1:
