@@ -341,7 +341,7 @@ with tab2:
                 st.info("Aucune donnee pour cette combinaison de filtres.")
 
     with col2:
-        st.subheader("Prediction metiers en tension par secteur")
+        st.subheader("Prediction metiers en tension — IDF globale")
         st.markdown('<div class="section-note">Metiers classes TRES EN TENSION — source : <b>predictions_itm.csv</b> (Random Forest). ITM moyen par secteur.</div>', unsafe_allow_html=True)
         if len(df_pred)>0:
             tres_df = df_pred[df_pred["statut_predit"]=="TRES EN TENSION"].copy()
