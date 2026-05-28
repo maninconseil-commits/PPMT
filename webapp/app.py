@@ -145,7 +145,7 @@ with tab2:
             fig2.update_layout(height=500,showlegend=False,coloraxis_showscale=False)
             st.plotly_chart(fig2, use_container_width=True)
     st.divider()
-    st.subheader("Evolution mensuelle des offres - Adzuna + France Travail")
+    st.subheader("Recence des offres - Offres recentes vs anciennes")
     if "mois" in df_all.columns:
         df_m = df_all.groupby(["annee","mois"]).size().reset_index(name="nb")
         df_m["periode"] = df_m["annee"].astype(str)+"-"+df_m["mois"].astype(str).str.zfill(2)
@@ -182,8 +182,9 @@ with tab3:
     tech = merge_skills(sk_az,sk_ft,"tech")
     if tech:
         df_t = pd.DataFrame(list(tech.items()),columns=["tech","nb"]).sort_values("nb",ascending=False)
-        fig3 = px.treemap(df_t, path=["tech"], values="nb", color="nb", color_continuous_scale=["#FFF5F5","#C53030"])
-        fig3.update_layout(height=400)
+        fig3 = px.bar(df_t.sort_values("nb"), x="nb", y="tech", orientation="h",
+            color="nb", color_continuous_scale=["#FFF5F5","#C53030"])
+        fig3.update_layout(height=450, showlegend=False, coloraxis_showscale=False)
         st.plotly_chart(fig3, use_container_width=True)
 
 with tab4:
