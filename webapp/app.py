@@ -619,11 +619,11 @@ with tab5:
             }
             df_dept["lat"] = df_dept["departement"].map(lambda x: coords.get(x,[48.85,2.35])[0])
             df_dept["lon"] = df_dept["departement"].map(lambda x: coords.get(x,[48.85,2.35])[1])
-            fig_map = px.scatter_mapbox(df_dept, lat="lat", lon="lon", size="nb",
+            fig_map = px.scatter_map(df_dept, lat="lat", lon="lon", size="nb",
                 color="nb", hover_name="departement",
                 hover_data={"nb":True,"lat":False,"lon":False},
                 color_continuous_scale=["#EBF8FF","#003189"],
-                size_max=60, zoom=9, mapbox_style="carto-positron")
+                size_max=60, zoom=9, map_style="carto-positron")
             fig_map.update_layout(height=420, coloraxis_showscale=False)
             st.plotly_chart(fig_map, width="stretch")
 
