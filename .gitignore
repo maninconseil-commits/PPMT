@@ -31,4 +31,8 @@ pyenv/
 .vscode/
 .idea/
 .DS_Store
-Thumbs.db
+Thumbs.db# Garder les fichiers clean pour Streamlit Cloud
+!data/offres_idf_clean.csv
+!data/offres_ft_idf_clean.csv
+!data/itm_consolide.csv
+!data/predictions_itm.csv
