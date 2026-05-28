@@ -145,7 +145,7 @@ with tab2:
             fig2.update_layout(height=500,showlegend=False,coloraxis_showscale=False)
             st.plotly_chart(fig2, use_container_width=True)
     st.divider()
-    st.subheader("Evolution mensuelle des offres")
+    st.subheader("Evolution mensuelle des offres - Adzuna + France Travail")
     if "mois" in df_all.columns:
         df_m = df_all.groupby(["annee","mois"]).size().reset_index(name="nb")
         df_m["periode"] = df_m["annee"].astype(str)+"-"+df_m["mois"].astype(str).str.zfill(2)
