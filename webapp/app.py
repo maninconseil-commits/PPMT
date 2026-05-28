@@ -308,16 +308,18 @@ with tab1:
                     xaxis_title="Offres", yaxis_title="")
                 st.plotly_chart(fig_mai, width="stretch")
         with col_b:
-            st.markdown("**France Travail — Mai 2026 par departement**")
-            if len(df_ft_mai)>0 and "departement" in df_ft_mai.columns:
-                df_dept_mai = df_ft_mai.groupby("departement").size().reset_index(name="nb")
-                df_dept_mai = df_dept_mai[df_dept_mai["departement"].notna()].sort_values("nb",ascending=True)
-                fig_dept = px.bar(df_dept_mai, x="nb", y="departement", orientation="h",
+            st.markdown("**France Travail — Offres par departement (filtre actif)**")
+            if "departement" in df_ft_f.columns and len(df_ft_f)>0:
+                df_dept_ft = df_ft_f.groupby("departement").size().reset_index(name="nb")
+                df_dept_ft = df_dept_ft[df_dept_ft["departement"].notna()].sort_values("nb",ascending=True)
+                fig_dept = px.bar(df_dept_ft, x="nb", y="departement", orientation="h",
                     color="nb", color_continuous_scale=["#FFF5F5","#C53030"], text="nb")
                 fig_dept.update_traces(textposition="outside")
                 fig_dept.update_layout(height=380, showlegend=False, coloraxis_showscale=False,
                     xaxis_title="Offres", yaxis_title="")
                 st.plotly_chart(fig_dept, width="stretch")
+            else:
+                st.info("Aucune offre FT pour cette combinaison de filtres.")
 
 # ══════════════════════════════════════════════════════════════
 # TAB 2 — SECTEURS
