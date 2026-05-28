@@ -408,14 +408,14 @@ with tab2:
 # ══════════════════════════════════════════════════════════════
 with tab3:
     st.subheader("Competences et Technologies")
-    st.markdown('<div class="section-note">Extraction automatique depuis les descriptions d offres — <b>tous secteurs confondus</b> (Adzuna + France Travail). Echelle = nombre d occurrences dans les textes des offres (ex: si "python" apparait 500 fois dans 24 000 offres = 500 occurrences).</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-note">Extraction depuis les descriptions des <b>20 286 offres des metiers TRES EN TENSION</b> (176 codes ROME). Echelle = nb occurrences. Source : Adzuna + France Travail combines.</div>', unsafe_allow_html=True)
 
     with st.spinner("Analyse des descriptions en cours..."):
         sk_az, sk_ft = extract_skills_tension(df_az, df_ft, df_pred)
 
     col1,col2 = st.columns(2)
     with col1:
-        st.markdown("#### Hard Skills les plus demandes (tous secteurs)")
+        st.markdown("#### Hard Skills — Metiers TRES EN TENSION (176 metiers, 20 286 offres)")
         hard = merge_skills(sk_az, sk_ft, "hard")
         if hard:
             df_h = pd.DataFrame(list(hard.items()),columns=["skill","nb"]).sort_values("nb")
